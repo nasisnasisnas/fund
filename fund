@@ -1,0 +1,39 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract CrowdFunding {
+    address public owner;
+    uint public targetAmount;
+    uint public currentAmount;
+    mapping(address => uint) public contributions;
+
+    event Contributed(address indexed contributor, uint amount);
+    event FundWithdrawn(uint amount);
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not the contract owner");
+        _;
+    }
+
+    constructor(uint _targetAmount) {
+        owner = msg.sender;
+        targetAmount = _targetAmount;
+    }
+
+    function contribute() public payable {
+        require(msg.value > 0, "Contribution must be greater than zero");
+        contributions[msg.sender] += msg.value;
+        currentAmount += msg.value;
+        emit Contributed(msg.sender, msg.value);
+    }
+
+    function withdrawFunds() public onlyOwner {
+        require(currentAmount >= targetAmount, "Target not reached");
+        payable(owner).transfer(currentAmount);
+        emit FundWithdrawn(currentAmount);
+    }
+
+    function getCurrentAmount() public view returns (uint) {
+        return currentAmount;
+    }
+}
